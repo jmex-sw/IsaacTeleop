@@ -14,7 +14,7 @@ namespace plugins
 namespace jmex
 {
 
-class MoxiSession;
+class ReceiverSession;
 
 //! Publishes a MOXI channel's actuated joints as ``JointStateOutput`` on the generic joint-space
 //! device path. Takes session handles rather than owning an ``OpenXRSession``, so publishers can
@@ -34,8 +34,8 @@ public:
     JointStatePublisher(const core::OpenXRSessionHandles& handles, const std::string& collection_id);
 
     //! Serialize the session's current joint values and push one sample. Call once per delivered
-    //! frame -- see MoxiSession::poll().
-    void publish(const MoxiSession& moxi);
+    //! frame -- see ReceiverSession::poll().
+    void publish(const ReceiverSession& receiver);
 
 private:
     std::string collection_id_;

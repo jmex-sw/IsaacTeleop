@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: Copyright (c) 2026 j-mex. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-#include "inc/jmex/moxi_session.hpp"
+#include "inc/jmex/receiver_session.hpp"
 
 #include <MoxiRobotReceiver.h>
 #include <atomic>
@@ -47,13 +47,13 @@ std::string moxi_sdk_version()
     return (version != nullptr) ? version : "unknown";
 }
 
-MoxiSession::MoxiSession(int channel, int tcp_port) : channel_(channel)
+ReceiverSession::ReceiverSession(int channel, int tcp_port) : channel_(channel)
 {
     bool expected = false;
     if (!g_session_alive.compare_exchange_strong(expected, true))
     {
         throw std::runtime_error(
-            "MoxiSession: a session already exists in this process; the MOXI "
+            "ReceiverSession: a session already exists in this process; the MOXI "
             "receiver is process-global and cannot be opened twice");
     }
 
@@ -61,7 +61,7 @@ MoxiSession::MoxiSession(int channel, int tcp_port) : channel_(channel)
     if (!MxRStartSystem(nullptr, tcp_port, nullptr, kUdpStartPort, MOXI_LOCAL_MOTION_ROBOT))
     {
         g_session_alive.store(false);
-        throw std::runtime_error("MoxiSession: MxRStartSystem failed on TCP port " + std::to_string(tcp_port) +
+        throw std::runtime_error("ReceiverSession: MxRStartSystem failed on TCP port " + std::to_string(tcp_port) +
                                  " -- the port is most likely already in use");
     }
 
@@ -69,7 +69,7 @@ MoxiSession::MoxiSession(int channel, int tcp_port) : channel_(channel)
     {
         MxRFinishSystem();
         g_session_alive.store(false);
-        throw std::runtime_error("MoxiSession: MxROpenChannel(" + std::to_string(channel_) +
+        throw std::runtime_error("ReceiverSession: MxROpenChannel(" + std::to_string(channel_) +
                                  ") failed; nothing would ever arrive on this channel");
     }
 
@@ -77,7 +77,7 @@ MoxiSession::MoxiSession(int channel, int tcp_port) : channel_(channel)
     MxBindDisconnectEvent(on_disconnect);
 }
 
-MoxiSession::~MoxiSession()
+ReceiverSession::~ReceiverSession()
 {
     // Unbind BEFORE the SDK goes down: the callback runs on the TCP receive thread and may arrive
     // during MxRFinishSystem.
@@ -87,12 +87,12 @@ MoxiSession::~MoxiSession()
     g_session_alive.store(false);
 }
 
-bool MoxiSession::is_streaming() const
+bool ReceiverSession::is_streaming() const
 {
     return MxCheckChannelConnected(channel_);
 }
 
-bool MoxiSession::poll()
+bool ReceiverSession::poll()
 {
     MxRUpdateSystem();
 
@@ -133,7 +133,7 @@ bool MoxiSession::poll()
     return joints_discovered_;
 }
 
-void MoxiSession::discover_joints()
+void ReceiverSession::discover_joints()
 {
     const int joint_count = MxRGetBoneJointCount(channel_);
     if (joint_count <= 0)
@@ -180,14 +180,14 @@ void MoxiSession::discover_joints()
     }
 }
 
-float MoxiSession::angle(const ActuatedJoint& joint) const
+float ReceiverSession::angle(const ActuatedJoint& joint) const
 {
     float angle = 0.0f;
     MxRGetBoneJointRotationAngle(channel_, joint.bone_index, &angle);
     return angle;
 }
 
-float MoxiSession::angular_velocity(const ActuatedJoint& joint) const
+float ReceiverSession::angular_velocity(const ActuatedJoint& joint) const
 {
     float velocity = 0.0f;
     MxRGetBoneJointAngularVelocity(channel_, joint.bone_index, &velocity);

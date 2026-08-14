@@ -43,13 +43,13 @@ cmake --install build
 `.gitignore` keeps that directory out of the repository — the SDK is yours to obtain and is not
 Apache-2.0, so it must not be committed.
 
-To keep the SDK elsewhere, point either `CMAKE_PREFIX_PATH` or `MOXI_SDK_ROOT` (a CMake variable or
+To keep the SDK elsewhere, point either `CMAKE_PREFIX_PATH` or `JMEX_SDK_ROOT` (a CMake variable or
 an environment variable) at the SDK's platform directory — the one containing
-`lib/cmake/MOXIReceiverSDK`. `MOXI_SDK_ROOT` is searched first, and warns instead of falling back
+`lib/cmake/MOXIReceiverSDK`. `JMEX_SDK_ROOT` is searched first, and warns instead of falling back
 silently if it holds no SDK the plugin can use:
 
 ```bash
-cmake -B build -DMOXI_SDK_ROOT=/path/to/MOXIReceiverSDK-1.1.0/sdk/linux-x64
+cmake -B build -DJMEX_SDK_ROOT=/path/to/MOXIReceiverSDK-1.1.0/sdk/linux-x64
 ```
 
 Without an SDK the plugin is skipped and the rest of the tree still builds — look for

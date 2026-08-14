@@ -11,7 +11,7 @@
  */
 
 #include <jmex/joint_state_publisher.hpp>
-#include <jmex/moxi_session.hpp>
+#include <jmex/receiver_session.hpp>
 #include <oxr/oxr_session.hpp>
 #include <pusherio/schema_pusher.hpp>
 
@@ -49,7 +49,7 @@ try
 
     // The receiver is the TCP server; MOXI Player connects in. Starting before the Player is up is
     // the normal case, not an error.
-    MoxiSession moxi(channel);
+    ReceiverSession receiver(channel);
 
     std::cout << "Waiting for MOXI Player to pair on channel " << channel << "..." << std::endl;
 
@@ -60,12 +60,12 @@ try
 
     while (true)
     {
-        if (moxi.poll())
+        if (receiver.poll())
         {
-            publisher.publish(moxi);
+            publisher.publish(receiver);
             if (published == 0)
             {
-                std::cout << "Streaming: " << moxi.actuated_joints().size() << " joints on collection '"
+                std::cout << "Streaming: " << receiver.actuated_joints().size() << " joints on collection '"
                           << collection_id << "'" << std::endl;
             }
             ++published;

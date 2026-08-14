@@ -33,7 +33,7 @@ std::string moxi_sdk_version();
  * constructed session is normally not streaming yet, and neither is one whose Player disconnected.
  * Callers poll and wait rather than treating silence as a failure.
  */
-class MoxiSession
+class ReceiverSession
 {
 public:
     //! Default TCP port the SDK's server binds and advertises to MOXI Player.
@@ -42,14 +42,14 @@ public:
     /*!
      * @param channel MOXI channel id to open (one skeleton per channel).
      * @param tcp_port Port the SDK's TCP server binds.
-     * @throws std::runtime_error if another MoxiSession already exists in this process, or if the
+     * @throws std::runtime_error if another ReceiverSession already exists in this process, or if the
      *         SDK refuses to start (almost always: the TCP port is in use).
      */
-    explicit MoxiSession(int channel, int tcp_port = DEFAULT_TCP_PORT);
-    ~MoxiSession();
+    explicit ReceiverSession(int channel, int tcp_port = DEFAULT_TCP_PORT);
+    ~ReceiverSession();
 
-    MoxiSession(const MoxiSession&) = delete;
-    MoxiSession& operator=(const MoxiSession&) = delete;
+    ReceiverSession(const ReceiverSession&) = delete;
+    ReceiverSession& operator=(const ReceiverSession&) = delete;
 
     /*!
      * @brief Pump the receiver once and report whether a new sample is ready to publish.

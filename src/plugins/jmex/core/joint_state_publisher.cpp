@@ -3,7 +3,7 @@
 
 #include "inc/jmex/joint_state_publisher.hpp"
 
-#include "inc/jmex/moxi_session.hpp"
+#include "inc/jmex/receiver_session.hpp"
 
 #include <flatbuffers/flatbuffers.h>
 #include <oxr_utils/os_time.hpp>
@@ -29,7 +29,7 @@ JointStatePublisher::JointStatePublisher(const core::OpenXRSessionHandles& handl
 {
 }
 
-void JointStatePublisher::publish(const MoxiSession& moxi)
+void JointStatePublisher::publish(const ReceiverSession& receiver)
 {
     core::JointStateOutputT out;
     out.device_id = collection_id_;
@@ -37,12 +37,12 @@ void JointStatePublisher::publish(const MoxiSession& moxi)
     out.has_effort = false;
     out.ee_pose_valid = false; // no device-side FK; the retargeter computes it when it needs it
 
-    for (const auto& joint : moxi.actuated_joints())
+    for (const auto& joint : receiver.actuated_joints())
     {
         auto entry = std::make_shared<core::JointStateT>();
         entry->name = joint.name;
-        entry->position = moxi.angle(joint);
-        entry->velocity = moxi.angular_velocity(joint);
+        entry->position = receiver.angle(joint);
+        entry->velocity = receiver.angular_velocity(joint);
         entry->valid = true;
         out.joints.push_back(std::move(entry));
     }

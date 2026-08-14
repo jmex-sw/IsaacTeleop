@@ -4,7 +4,7 @@
 cmake_minimum_required(VERSION 3.20)
 
 # The MOXI Receiver SDK is a separate download from j-mex (see README.md). Unpack it into this
-# directory as MOXIReceiverSDK/ for a zero-flag build, or point MOXI_SDK_ROOT or CMAKE_PREFIX_PATH at
+# directory as MOXIReceiverSDK/ for a zero-flag build, or point JMEX_SDK_ROOT or CMAKE_PREFIX_PATH at
 # an SDK platform directory -- the one holding lib/cmake/MOXIReceiverSDK. Without any of them the
 # plugin is skipped rather than failing the build, as with the haptikos and manus plugins.
 #
@@ -12,18 +12,18 @@ cmake_minimum_required(VERSION 3.20)
 # not ship, and pass MxRStartSystem the udp start port it grew in 1.1.0.
 set(_JMEX_LOCAL_SDK_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/MOXIReceiverSDK")
 
-if(NOT DEFINED MOXI_SDK_ROOT AND DEFINED ENV{MOXI_SDK_ROOT})
-    set(MOXI_SDK_ROOT "$ENV{MOXI_SDK_ROOT}" CACHE PATH "Path to the MOXI Receiver SDK platform directory")
+if(NOT DEFINED JMEX_SDK_ROOT AND DEFINED ENV{JMEX_SDK_ROOT})
+    set(JMEX_SDK_ROOT "$ENV{JMEX_SDK_ROOT}" CACHE PATH "Path to the MOXI Receiver SDK platform directory")
 endif()
 
 # An override is searched on its own first: a stale or mistyped one must be reported, not degrade
 # into a silent build against whatever is unpacked in the plugin directory. The cached result of an
-# earlier configure is dropped, or a since-edited MOXI_SDK_ROOT would never be looked at again.
-if(MOXI_SDK_ROOT)
+# earlier configure is dropped, or a since-edited JMEX_SDK_ROOT would never be looked at again.
+if(JMEX_SDK_ROOT)
     unset(MOXIReceiverSDK_DIR CACHE)
-    find_package(MOXIReceiverSDK 1.1 QUIET NO_DEFAULT_PATH PATHS "${MOXI_SDK_ROOT}")
+    find_package(MOXIReceiverSDK 1.1 QUIET NO_DEFAULT_PATH PATHS "${JMEX_SDK_ROOT}")
     if(NOT TARGET Moxi::Receiver)
-        message(WARNING "MOXI_SDK_ROOT='${MOXI_SDK_ROOT}' holds no MOXIReceiverSDK 1.1 or newer; "
+        message(WARNING "JMEX_SDK_ROOT='${JMEX_SDK_ROOT}' holds no MOXIReceiverSDK 1.1 or newer; "
                         "ignoring it and searching the usual paths")
     endif()
 endif()
@@ -37,7 +37,7 @@ endif()
 if(NOT TARGET Moxi::Receiver)
     message(STATUS "Skipping jmex plugin build: MOXIReceiverSDK 1.1 or newer not found "
                    "(unpack the SDK into ${_JMEX_LOCAL_SDK_ROOT}, or set CMAKE_PREFIX_PATH or "
-                   "MOXI_SDK_ROOT to <sdk>/sdk/linux-x64)")
+                   "JMEX_SDK_ROOT to <sdk>/sdk/linux-x64)")
     return()
 endif()
 

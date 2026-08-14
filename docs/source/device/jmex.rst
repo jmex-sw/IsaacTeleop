@@ -69,15 +69,15 @@ are then needed:
 That directory is covered by the plugin's ``.gitignore``: the SDK is obtained from j-mex and is not
 Apache-2.0 licensed, so it must not be committed.
 
-To keep the SDK elsewhere, point ``CMAKE_PREFIX_PATH`` or ``MOXI_SDK_ROOT`` (a CMake or environment
+To keep the SDK elsewhere, point ``CMAKE_PREFIX_PATH`` or ``JMEX_SDK_ROOT`` (a CMake or environment
 variable) at the SDK's platform directory — the one containing ``lib/cmake/MOXIReceiverSDK``. Both
-take precedence over a copy unpacked in the plugin directory; ``MOXI_SDK_ROOT`` is searched first and
+take precedence over a copy unpacked in the plugin directory; ``JMEX_SDK_ROOT`` is searched first and
 warns rather than falling back silently when it holds no SDK the plugin can use. Either way, the
 configure output names the SDK that answered:
 
 .. code-block:: bash
 
-   cmake -B build -DMOXI_SDK_ROOT=/path/to/MOXIReceiverSDK-1.1.0/sdk/linux-x64
+   cmake -B build -DJMEX_SDK_ROOT=/path/to/MOXIReceiverSDK-1.1.0/sdk/linux-x64
    # -- jmex plugin: MOXIReceiverSDK 1.1.0 from .../sdk/linux-x64/lib/cmake/MOXIReceiverSDK
 
 CMake skips the whole plugin when no SDK is found, so a tree without it still builds. If the plugin
@@ -227,7 +227,7 @@ Troubleshooting
      - The CloudXR runtime is not running, or is running with an ``auto-*`` device profile
    * - ``Skipping jmex plugin build:`` at configure time
      - No SDK in ``src/plugins/jmex/MOXIReceiverSDK/``, and ``CMAKE_PREFIX_PATH`` /
-       ``MOXI_SDK_ROOT`` does not point at an SDK platform directory either
+       ``JMEX_SDK_ROOT`` does not point at an SDK platform directory either
    * - Joint names do not match the robot asset
      - Player is loaded with a different robot; run ``jmex_joint_state_printer`` to see what is
        actually being sent

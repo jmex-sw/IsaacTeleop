@@ -2,9 +2,9 @@
 # SPDX-License-Identifier: Apache-2.0
 
 add_library(jmex_plugin_core STATIC
-    moxi_session.cpp
+    receiver_session.cpp
     joint_state_publisher.cpp
-    inc/jmex/moxi_session.hpp
+    inc/jmex/receiver_session.hpp
     inc/jmex/joint_state_publisher.hpp
 )
 
@@ -15,7 +15,7 @@ target_include_directories(jmex_plugin_core
 
 # Public headers include schema_pusher.hpp and oxr_session_handles.hpp, so both targets propagate.
 # The vendor SDK does not: no public header names it, and this library is the only caller -- what
-# the plugin needs from it (the dialect, the version string) is behind jmex/moxi_session.hpp.
+# the plugin needs from it (the dialect, the version string) is behind jmex/receiver_session.hpp.
 target_link_libraries(jmex_plugin_core
     PUBLIC
         pusherio::pusherio
