@@ -21,11 +21,18 @@ plugin publishes, how to consume the data, and what to check when it does not wo
    access through the [AgileMaster product page](https://jmex.com.tw/agilemaster/).
 2. **MOXI Player**, on this machine or another on the same subnet, started in either order — the
    device page covers the host layout.
-3. **CloudXR runtime**, started with a concrete device profile — the tensor transport is an OpenXR
-   runtime feature, so it is required even though no headset is:
+3. **CloudXR runtime** — the tensor transport is an OpenXR runtime feature, so it is required even
+   though no headset is. It needs a concrete device profile; the default, `Quest3`, already is one.
 
    ```bash
-   NV_DEVICE_PROFILE=Quest3 python -m isaacteleop.cloudxr.service run
+   python -m isaacteleop.cloudxr.service run
+   ```
+
+   Then source the environment it writes in **every** terminal you start these binaries from — they
+   are native OpenXR applications and do not embed `CloudXRLauncher`:
+
+   ```bash
+   source ~/.cloudxr/run/cloudxr.env
    ```
 
 ## Building
@@ -75,7 +82,9 @@ consumes what the plugin publishes, so the plugin has to stay running:
 
 ```bash
 # Terminal 1
+source ~/.cloudxr/run/cloudxr.env
 ./install/plugins/jmex/jmex_plugin
 # Terminal 2
+source ~/.cloudxr/run/cloudxr.env
 ./install/plugins/jmex/jmex_joint_state_printer jmex
 ```

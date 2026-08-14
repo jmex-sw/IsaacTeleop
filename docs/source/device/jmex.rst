@@ -86,19 +86,38 @@ is missing from your build, look for ``Skipping jmex plugin build:`` in the conf
 Step 3: Start the CloudXR runtime
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The runtime must be running with a **concrete device profile**. No headset is required, but the
-default ``auto-webrtc`` profile resolves the device from whichever client connects, so with no client
-there is no system and the plugin dies at startup with ``Failed to get OpenXR system: -35``
-(``XR_ERROR_FORM_FACTOR_UNAVAILABLE``). In one terminal, and keep it running for the session:
+The tensor transport is an OpenXR runtime feature, so the runtime is a hard requirement even though
+nothing here is a headset. In one terminal, and keep it running for the session:
 
 .. code-block:: bash
 
-   NV_DEVICE_PROFILE=Quest3 python -m isaacteleop.cloudxr.service run
+   python -m isaacteleop.cloudxr.service run
 
-Set the profile as an environment variable — a ``--cloudxr-env-config`` file did not take effect.
+The runtime needs a **concrete device profile**, and the default — ``Quest3`` — already is one. An
+``auto-*`` profile resolves the device from whichever client connects, so with no client there is no
+system and the plugin dies at startup with ``Failed to get OpenXR system: -35``
+(``XR_ERROR_FORM_FACTOR_UNAVAILABLE``). To choose a different one, hand the service an env file,
+which takes precedence over the process environment:
+
+.. code-block:: bash
+
+   echo NV_DEVICE_PROFILE=AppleVisionPro > cloudxr.env
+   python -m isaacteleop.cloudxr.service run --cloudxr-env-config cloudxr.env
+
+Then, **in every terminal you start the plugin or the printer from**, load the environment the
+service wrote. Both are native OpenXR applications that do not embed ``CloudXRLauncher``, so nothing
+points their loader at CloudXR until this is sourced:
+
+.. code-block:: bash
+
+   source ~/.cloudxr/run/cloudxr.env
+
+See :ref:`load-cloudxr-environment-variables` for the full explanation.
 
 Step 4: Run the plugin
 ~~~~~~~~~~~~~~~~~~~~~~
+
+In a terminal with ``cloudxr.env`` sourced:
 
 .. code-block:: bash
 
@@ -136,10 +155,12 @@ Step 6: Verify the transport
 
 ``jmex_joint_state_printer`` reads the collection the plugin publishes on, so it separates "the
 device path works" from "my pipeline is misconfigured". It is a downstream consumer, not a second
-receiver: **leave the plugin running** and start the printer in another terminal.
+receiver: **leave the plugin running** and start the printer in another terminal — sourcing
+``cloudxr.env`` there too, since it is a native OpenXR application of its own.
 
 .. code-block:: bash
 
+   source ~/.cloudxr/run/cloudxr.env
    ./install/plugins/jmex/jmex_joint_state_printer jmex
 
 Printing nothing means no sample has arrived yet — the plugin is not running, or Player has not
@@ -266,7 +287,8 @@ Troubleshooting
      - Player is streaming on the channel the plugin opened; on a two-host setup, both hosts on the
        same subnet and access-point client isolation on wireless
    * - ``Failed to get OpenXR system: -35``
-     - The CloudXR runtime is not running, or is running with an ``auto-*`` device profile
+     - ``~/.cloudxr/run/cloudxr.env`` has not been sourced in this terminal; or the runtime is not
+       running; or it is running with an ``auto-*`` device profile
    * - ``Skipping jmex plugin build:`` at configure time
      - No SDK in ``src/plugins/jmex/MOXIReceiverSDK/``, and ``CMAKE_PREFIX_PATH`` /
        ``JMEX_SDK_ROOT`` does not point at an SDK platform directory either
