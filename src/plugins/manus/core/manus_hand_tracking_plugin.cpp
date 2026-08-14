@@ -668,10 +668,7 @@ void ManusTracker::OnLandscapeStream(const Landscape* landscape)
         {
             tracker.left_glove_id = glove.id;
             left_present = true;
-            if (tracker.m_left_calibrated_glove_id != glove.id && tracker.apply_glove_calibration(glove.id, true))
-            {
-                tracker.m_left_calibrated_glove_id = glove.id;
-            }
+            tracker.apply_glove_calibration(glove.id, true)
             // Fetch bone topology once on connect
             uint32_t nc = 0;
             if (get_raw_skeleton_node_count(glove.id, nc) == SDKReturnCode::SDKReturnCode_Success && nc > 0)
@@ -687,10 +684,7 @@ void ManusTracker::OnLandscapeStream(const Landscape* landscape)
         {
             tracker.right_glove_id = glove.id;
             right_present = true;
-            if (tracker.m_right_calibrated_glove_id != glove.id && tracker.apply_glove_calibration(glove.id, false))
-            {
-                tracker.m_right_calibrated_glove_id = glove.id;
-            }
+            tracker.apply_glove_calibration(glove.id, false)
             uint32_t nc = 0;
             if (get_raw_skeleton_node_count(glove.id, nc) == SDKReturnCode::SDKReturnCode_Success && nc > 0)
             {
@@ -713,7 +707,6 @@ void ManusTracker::OnLandscapeStream(const Landscape* landscape)
         {
             std::cout << "[Manus] Left glove disconnected (ID " << *tracker.left_glove_id << ")" << std::endl;
             tracker.left_glove_id.reset();
-            tracker.m_left_calibrated_glove_id.reset();
             tracker.m_left_hand_nodes.clear();
             tracker.m_left_node_info.clear();
             {
@@ -725,7 +718,6 @@ void ManusTracker::OnLandscapeStream(const Landscape* landscape)
         {
             std::cout << "[Manus] Right glove disconnected (ID " << *tracker.right_glove_id << ")" << std::endl;
             tracker.right_glove_id.reset();
-            tracker.m_right_calibrated_glove_id.reset();
             tracker.m_right_hand_nodes.clear();
             tracker.m_right_node_info.clear();
             {
