@@ -6,8 +6,8 @@
  * @brief j-mex AgileMaster device plugin: streams a MOXI channel's robot joint angles as
  *        ``JointStateOutput`` over the OpenXR tensor transport.
  *
- * Usage: ``jmex_plugin [channel] [collection_id]`` (defaults: 255, "jmex"). There is no synthetic
- * backend: building needs the MOXI Receiver SDK and running needs MOXI Player. See README.md.
+ * Usage: ``jmex_plugin [--channel=255] [--collection-id=jmex]``. There is no synthetic backend:
+ * building needs the MOXI Receiver SDK and running needs MOXI Player. See README.md.
  */
 
 #include <jmex/joint_state_publisher.hpp>
@@ -16,9 +16,9 @@
 #include <pusherio/schema_pusher.hpp>
 
 #include <chrono>
-#include <cstdlib>
 #include <iostream>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <thread>
 
@@ -31,13 +31,68 @@ namespace
 // and it being published well under one frame; nothing is published twice.
 constexpr int kPollHz = 240;
 
+bool starts_with(const std::string& value, const std::string& prefix)
+{
+    return value.size() >= prefix.size() && value.compare(0, prefix.size(), prefix) == 0;
+}
+
+struct PluginArgs
+{
+    int channel = 255;
+    std::string collection_id = "jmex";
+};
+
+//! Parse named arguments, last one wins.
+//!
+//! Named rather than positional because the PluginManager injects ``--plugin-root-id=<id>`` ahead of
+//! everything plugin.yaml and PluginConfig supply: positional arguments would all shift by one and
+//! the plugin would come up on a channel nobody asked for, silently.
+PluginArgs parse_args(int argc, char** argv)
+{
+    PluginArgs args;
+
+    for (int i = 1; i < argc; ++i)
+    {
+        const std::string arg = argv[i];
+        if (starts_with(arg, "--channel="))
+        {
+            const std::string value = arg.substr(std::string("--channel=").size());
+            try
+            {
+                args.channel = std::stoi(value);
+            }
+            catch (const std::exception&)
+            {
+                // A channel that silently defaults is the one failure this plugin cannot afford:
+                // it pairs with nothing and looks exactly like Player not being started.
+                throw std::runtime_error("--channel= takes a number, got '" + value + "'");
+            }
+        }
+        else if (starts_with(arg, "--collection-id="))
+        {
+            args.collection_id = arg.substr(std::string("--collection-id=").size());
+        }
+        else if (starts_with(arg, "--plugin-root-id="))
+        {
+            // Injected by the PluginManager; not used by this plugin.
+        }
+        else
+        {
+            std::cerr << "jmex: ignoring unknown argument '" << arg << "'" << std::endl;
+        }
+    }
+
+    return args;
+}
+
 } // namespace
 
 int main(int argc, char** argv)
 try
 {
-    const int channel = (argc > 1) ? std::atoi(argv[1]) : 255;
-    const std::string collection_id = (argc > 2) ? argv[2] : "jmex";
+    const PluginArgs args = parse_args(argc, argv);
+    const int channel = args.channel;
+    const std::string collection_id = args.collection_id;
 
     std::cout << "j-mex AgileMaster plugin (channel: " << channel << ", collection: " << collection_id
               << ", SDK: " << moxi_sdk_version() << ")" << std::endl;

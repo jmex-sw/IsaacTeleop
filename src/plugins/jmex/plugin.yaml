@@ -5,6 +5,11 @@ name: jmex
 description: "j-mex AgileMaster motion capture: robot joint angles as JointStateOutput"
 command: "./jmex_plugin"
 version: "1.0.0"
+# The plugin's own defaults, stated where an integrator can see and override them: PluginConfig's
+# plugin_args are appended after these and the last value of a flag wins.
+args:
+  - "--channel=255"
+  - "--collection-id=jmex"
 devices:
   - path: "/robot/jmex"
     type: "joint_state"

@@ -62,8 +62,12 @@ Without an SDK the plugin is skipped and the rest of the tree still builds — l
 ./install/plugins/jmex/jmex_plugin
 
 # Explicit channel and collection id
-./install/plugins/jmex/jmex_plugin 255 jmex
+./install/plugins/jmex/jmex_plugin --channel=255 --collection-id=jmex
 ```
+
+`TeleopSession` can start it instead, through a `PluginConfig` pointing at `install/plugins` — see
+the device page. Arguments are named rather than positional because the PluginManager injects
+`--plugin-root-id=<id>` ahead of them.
 
 `jmex_joint_state_printer` reads back what the plugin publishes with no Python and no retargeting
 graph in the way, so it separates "the device path works" from "my pipeline is misconfigured". It

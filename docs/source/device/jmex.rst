@@ -106,7 +106,9 @@ Step 4: Run the plugin
    ./install/plugins/jmex/jmex_plugin
 
    # Explicit channel and collection id
-   ./install/plugins/jmex/jmex_plugin 255 jmex
+   ./install/plugins/jmex/jmex_plugin --channel=255 --collection-id=jmex
+
+Isaac Teleop can start it for you instead — see `Letting Isaac Teleop launch the plugin`_.
 
 **Start it before Player.** The receiver is the TCP server and Player is the client — the direction
 is the opposite of what the data flow suggests — so the plugin waits to be paired, and keeps waiting
@@ -168,6 +170,46 @@ example :code-file:`JointStateRetargeterConfig.device_joints
 <src/python/isaacteleop/retargeters/joint_space/joint_state_retargeter.py>`). Run
 ``jmex_joint_state_printer`` to see the exact names your Player is sending.
 
+Letting Isaac Teleop launch the plugin
+--------------------------------------
+
+``TeleopSession`` can own the plugin process for you, starting it on entry and stopping it on exit.
+Add a ``PluginConfig`` naming this plugin and pointing at an **installed** tree:
+
+.. code-block:: python
+
+   from pathlib import Path
+   from isaacteleop.teleop_session_manager import PluginConfig, TeleopSessionConfig
+
+   session_config = TeleopSessionConfig(
+       app_name="AgileMasterTeleop",
+       pipeline=pipeline,
+       plugins=[
+           PluginConfig(
+               plugin_name="jmex",     # plugin.yaml's name
+               plugin_root_id="jmex",
+               search_paths=[Path("install/plugins")],
+           )
+       ],
+   )
+
+The search path holds the ``plugins/`` directory ``cmake --install`` writes, not the build tree — a
+plugin that has only been built is not discoverable. To pass a different channel, append
+``plugin_args=["--channel=1"]``; it lands after ``plugin.yaml``'s ``args`` and the last value of a
+flag wins.
+
+Two things are worth knowing before this is your setup:
+
+- **A search path that does not exist, or a name no ``plugin.yaml`` declares, is skipped in silence.**
+  Nothing is raised, so the symptom is not an error but a first sample that never arrives. Check the
+  path yourself before handing it over if you want a clear failure.
+- **``--plugin-root-id=<id>`` is injected ahead of everything you supply.** This plugin ignores it,
+  but a plugin of your own that reads positional arguments would misread that one as the first.
+
+Starting the plugin yourself stays supported and is the better shape while bringing a device up: the
+plugin can be restarted without restarting the simulator, Player re-pairs on its own, and the two
+processes' logs stay apart.
+
 What the plugin publishes
 -------------------------
 
@@ -176,7 +218,7 @@ What the plugin publishes
    :widths: 25 75
 
    * - Collection
-     - ``jmex`` by default; the plugin's second positional argument
+     - ``jmex`` by default; the plugin's ``--collection-id``
    * - Schema
      - ``JointStateOutput``
    * - Consumer
