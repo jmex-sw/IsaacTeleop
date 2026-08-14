@@ -1,0 +1,11 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 j-mex. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+name: jmex
+description: "j-mex MOXI motion capture: robot joint angles as JointStateOutput"
+command: "./jmex_plugin"
+version: "1.0.0"
+devices:
+  - path: "/robot/jmex"
+    type: "joint_state"
+    description: "MOXI Player robot-dialect channel (per-joint angles and angular velocities)"
