@@ -93,7 +93,7 @@ there is no system and the plugin dies at startup with ``Failed to get OpenXR sy
 
 .. code-block:: bash
 
-   NV_DEVICE_PROFILE=Quest3 python -m isaacteleop.cloudxr
+   NV_DEVICE_PROFILE=Quest3 python -m isaacteleop.cloudxr.service run
 
 Set the profile as an environment variable — a ``--cloudxr-env-config`` file did not take effect.
 

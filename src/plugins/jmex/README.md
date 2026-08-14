@@ -25,7 +25,7 @@ plugin publishes, how to consume the data, and what to check when it does not wo
    runtime feature, so it is required even though no headset is:
 
    ```bash
-   NV_DEVICE_PROFILE=Quest3 python -m isaacteleop.cloudxr
+   NV_DEVICE_PROFILE=Quest3 python -m isaacteleop.cloudxr.service run
    ```
 
 ## Building
