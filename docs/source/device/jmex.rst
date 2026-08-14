@@ -58,8 +58,8 @@ Prerequisites
 - **MOXI Receiver SDK**, 1.1 or newer — a separate download from j-mex; not bundled here. CMake
   finds it at configure time and skips the whole plugin when it is absent, so a tree without the SDK
   still builds.
-- **MOXI Player for Robot** — the vendor application, running **on a second machine** (see
-  :ref:`jmex-player-separate-host`).
+- **MOXI Player for Robot** — the vendor application. It may run on this machine or another (see
+  :ref:`jmex-player-host`).
 - **CloudXR runtime** — the tensor transport is an OpenXR runtime feature, so the runtime is a hard
   requirement even though nothing here is a headset.
 
@@ -96,7 +96,7 @@ output.
 MOXI Player
 -----------
 
-Player captures the motion, retargets it onto the robot URDF, and connects to this plugin. Its own
+Player captures the motion, retargets it onto the robot URDF, and pairs with this plugin. Its own
 README and glove guide ship with the application and cover the workflow in full; what follows is
 what matters for driving Isaac Teleop.
 
@@ -125,28 +125,25 @@ Glove calibration is not done in Player, which only reads glove data; it is perf
 Manus Core application on a Windows PC. The gloves ship calibrated, so day-to-day use needs no
 per-session calibration.
 
-.. _jmex-player-separate-host:
+.. _jmex-player-host:
 
-Run Player on a separate host
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Where Player runs
+~~~~~~~~~~~~~~~~~
 
-With **Receiver SDK 1.0.0**, Player and the plugin **cannot share a machine**. Player binds UDP
-``10100`` to receive the receiver's advertisements, and the Receiver SDK binds the same port as its
-broadcast *source* port, so on one host the second one loses. The failure is silent: startup still
-reports success, the SDK prints ``bind socker error: Address already in use``, no advertisement goes
-out, Player never learns where to connect, and the plugin waits for a pairing that cannot happen. If
-the plugin sits at ``Waiting for MOXI Player to pair`` forever, check for a local Player first:
+**One machine or two, started in either order.** The receiver's advertisements are sent from an
+ephemeral source port, leaving UDP ``10100`` — the port Player listens on — free for a Player on the
+same host.
 
-.. code-block:: bash
+Two hosts remain the right layout when the operator is not sitting at the simulation machine. They
+must then be on the same subnet: the advertisement is a ``255.255.255.255`` limited broadcast, which
+routers do not forward. On wireless networks, access-point client isolation blocks it too — suspect
+that before suspecting the plugin.
 
-   ss -lnup | grep 10100
-
-A later SDK release may drop that bind and lift the restriction, but the failure gives no clue that
-the SDK version is what matters, so check it against the version you have.
-
-Both hosts must be on the same subnet: the advertisement is a ``255.255.255.255`` limited
-broadcast, which routers do not forward. On wireless networks, access-point client isolation blocks
-it too — suspect that before suspecting the plugin.
+Receiver SDKs before 1.1.0 bound ``10100`` as the broadcast *source* port and so lost it to any
+local Player, silently: startup still reported success, no advertisement went out, and the plugin
+waited for a pairing that could not happen. That is why older material calls for a second machine.
+This plugin requires 1.1 or newer and does not build against those releases, so the constraint
+cannot apply to it.
 
 The **product line must match**: this plugin opens the robot dialect, and a robot-line Player does
 not downgrade. Pointing it at a general-line Player desynchronizes the parse rather than failing
@@ -187,8 +184,10 @@ normal case: it waits, and keeps waiting if Player disconnects and comes back.
    # Explicit channel and collection id
    ./install/plugins/jmex/jmex_plugin 255 jmex
 
-Only **one instance per machine**: the receiver is process-global, and this plugin always takes the
-same TCP and UDP ports, so a second one has nothing to bind to.
+Only **one instance per machine**: the receiver is process-global, and the plugin holds the SDK's TCP
+server port at its default rather than taking it from the command line, so a second instance finds
+that port taken. Running several receivers on one host is a supported SDK configuration; reaching it
+would mean giving each one its own port.
 
 Verifying the transport
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -227,8 +226,8 @@ Troubleshooting
    * - Symptom
      - What to check
    * - Plugin waits at ``Waiting for MOXI Player to pair`` forever
-     - A Player on the same host (``ss -lnup | grep 10100``); both hosts on the same subnet;
-       access-point client isolation on wireless
+     - Player is streaming on the channel the plugin opened; on a two-host setup, both hosts on the
+       same subnet and access-point client isolation on wireless
    * - ``Failed to get OpenXR system: -35``
      - The CloudXR runtime is not running, or is running with an ``auto-*`` device profile
    * - ``Skipping jmex plugin build:`` at configure time

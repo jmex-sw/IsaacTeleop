@@ -16,8 +16,8 @@ work.
 ## Prerequisites
 
 1. **MOXI Receiver SDK** 1.1 or newer — a separate download from j-mex; not bundled here.
-2. **MOXI Player**, paired with this machine over the local network — the device page has the host
-   layout it needs.
+2. **MOXI Player**, on this machine or another on the same subnet, started in either order — the
+   device page covers the host layout.
 3. **CloudXR runtime**, started with a concrete device profile — the tensor transport is an OpenXR
    runtime feature, so it is required even though no headset is:
 
