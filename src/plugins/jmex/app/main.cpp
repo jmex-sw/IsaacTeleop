@@ -3,7 +3,7 @@
 
 /*!
  * @file main.cpp
- * @brief j-mex MOXI device plugin: streams a MOXI channel's robot joint angles as
+ * @brief j-mex AgileMaster device plugin: streams a MOXI channel's robot joint angles as
  *        ``JointStateOutput`` over the OpenXR tensor transport.
  *
  * Usage: ``jmex_plugin [channel] [collection_id]`` (defaults: 255, "jmex"). There is no synthetic
@@ -39,7 +39,7 @@ try
     const int channel = (argc > 1) ? std::atoi(argv[1]) : 255;
     const std::string collection_id = (argc > 2) ? argv[2] : "jmex";
 
-    std::cout << "j-mex MOXI plugin (channel: " << channel << ", collection: " << collection_id
+    std::cout << "j-mex AgileMaster plugin (channel: " << channel << ", collection: " << collection_id
               << ", SDK: " << moxi_sdk_version() << ")" << std::endl;
 
     // OpenXR first: a missing runtime is the common setup mistake, and failing on it before the

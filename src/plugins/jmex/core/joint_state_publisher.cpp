@@ -24,7 +24,7 @@ JointStatePublisher::JointStatePublisher(const core::OpenXRSessionHandles& handl
                                         .max_flatbuffer_size = MAX_FLATBUFFER_SIZE,
                                         // Must match what JointStateTracker reads.
                                         .tensor_identifier = "joint_state",
-                                        .localized_name = "MOXI Motion Capture",
+                                        .localized_name = "j-mex AgileMaster",
                                         .app_name = "JmexPlugin" })
 {
 }
@@ -47,7 +47,7 @@ void JointStatePublisher::publish(const MoxiSession& moxi)
         out.joints.push_back(std::move(entry));
     }
 
-    // MOXI carries no device clock -- the sequence id is a counter, not a timestamp -- so the local
+    // Player carries no device clock -- the sequence id is a counter, not a timestamp -- so the local
     // common clock is the only real one we have and it stands in for both.
     const auto sample_time_ns = core::os_monotonic_now_ns();
 

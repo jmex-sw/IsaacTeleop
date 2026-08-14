@@ -18,7 +18,7 @@ struct ActuatedJoint
 {
     //! Index into the channel's joint array; the key for every per-joint SDK call.
     int bone_index;
-    //! The name MOXI reports on the wire, used verbatim as the cross-system lookup key.
+    //! The name Player reports on the wire, used verbatim as the cross-system lookup key.
     std::string name;
 };
 

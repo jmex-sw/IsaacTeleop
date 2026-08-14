@@ -3,19 +3,22 @@ SPDX-FileCopyrightText: Copyright (c) 2026 j-mex. All rights reserved.
 SPDX-License-Identifier: Apache-2.0
 -->
 
-# j-mex MOXI plugin
+# j-mex AgileMaster plugin
 
-Streams a [MOXI](https://www.j-mex.com/) motion capture channel into Isaac Teleop as
-`JointStateOutput` on the [generic joint-space device path](../../../docs/source/device/joint_space.rst).
+Streams a [j-mex AgileMaster](https://jmex.com.tw/agilemaster/) motion capture channel into Isaac
+Teleop as `JointStateOutput` on the [generic joint-space device path](../../../docs/source/device/joint_space.rst).
+
+AgileMaster is the whole system: the **j-mex Mocap Suit**, **MOXI Player**, and the
+**MOXI Receiver SDK** this plugin links against.
 
 This file is the short version of building and running the binaries, beside the installed plugin.
-The [device page](../../../docs/source/device/jmex.rst) is the full guide: what the plugin
-publishes, how to run MOXI Player, how to consume the data, and what to check when it does not
-work.
+The [device page](../../../docs/source/device/jmex.rst) is the full guide: the Quick Start, what the
+plugin publishes, how to consume the data, and what to check when it does not work.
 
 ## Prerequisites
 
-1. **MOXI Receiver SDK** 1.1 or newer — a separate download from j-mex; not bundled here.
+1. **MOXI Receiver SDK** 1.1 or newer — not publicly downloadable and licence-key gated. Request
+   access through the [AgileMaster product page](https://jmex.com.tw/agilemaster/).
 2. **MOXI Player**, on this machine or another on the same subnet, started in either order — the
    device page covers the host layout.
 3. **CloudXR runtime**, started with a concrete device profile — the tensor transport is an OpenXR
@@ -63,8 +66,12 @@ Without an SDK the plugin is skipped and the rest of the tree still builds — l
 ```
 
 `jmex_joint_state_printer` reads back what the plugin publishes with no Python and no retargeting
-graph in the way, so it separates "the device path works" from "my pipeline is misconfigured":
+graph in the way, so it separates "the device path works" from "my pipeline is misconfigured". It
+consumes what the plugin publishes, so the plugin has to stay running:
 
 ```bash
+# Terminal 1
+./install/plugins/jmex/jmex_plugin
+# Terminal 2
 ./install/plugins/jmex/jmex_joint_state_printer jmex
 ```
