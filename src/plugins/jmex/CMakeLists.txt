@@ -4,32 +4,35 @@
 cmake_minimum_required(VERSION 3.20)
 
 # The MOXI Receiver SDK is a separate download from j-mex (see README.md). Unpack it into this
-# directory as MOXIReceiverSDK/ and no build flags are needed -- .gitignore keeps it out of the
-# repository, as with the vendor SDK the manus plugin expects.
+# directory as MOXIReceiverSDK/ for a zero-flag build, or point MOXI_SDK_ROOT or CMAKE_PREFIX_PATH at
+# an SDK platform directory -- the one holding lib/cmake/MOXIReceiverSDK. Without any of them the
+# plugin is skipped rather than failing the build, as with the haptikos and manus plugins.
 #
-# CMAKE_PREFIX_PATH and MOXI_SDK_ROOT still point the search elsewhere; the local directory is only
-# the last place looked. Either one wants the platform directory holding lib/cmake/MOXIReceiverSDK:
-#
-#   cmake -S . -B build -DCMAKE_PREFIX_PATH=/path/to/MOXIReceiverSDK-1.1.0/sdk/linux-x64
-#
-# Without the SDK the whole plugin is skipped rather than failing the build, so a tree without it
-# still configures and builds -- the same arrangement the haptikos and manus plugins use.
+# 1.1 is a hard minimum, not a preference: the sources include MoxiRobotReceiver.h, which 1.0.0 does
+# not ship, and pass MxRStartSystem the udp start port it grew in 1.1.0.
 set(_JMEX_LOCAL_SDK_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/MOXIReceiverSDK")
 
 if(NOT DEFINED MOXI_SDK_ROOT AND DEFINED ENV{MOXI_SDK_ROOT})
     set(MOXI_SDK_ROOT "$ENV{MOXI_SDK_ROOT}" CACHE PATH "Path to the MOXI Receiver SDK platform directory")
 endif()
 
-# PATHS is searched after CMAKE_PREFIX_PATH, and within PATHS the explicit root precedes the local
-# one, so an override always wins over whatever happens to be unpacked here.
-#
-# 1.1 is a hard minimum, not a preference: the sources include MoxiRobotReceiver.h, which 1.0.0 does
-# not ship, and call MxRStartSystem with the udp start port it grew in 1.1.0. Asking for the version
-# here turns an older SDK into the same clean skip as a missing one, rather than a compile error.
-find_package(MOXIReceiverSDK 1.1 QUIET PATHS
-             ${MOXI_SDK_ROOT}
-             "${_JMEX_LOCAL_SDK_ROOT}/sdk/linux-x64"
-             "${_JMEX_LOCAL_SDK_ROOT}")
+# An override is searched on its own first: a stale or mistyped one must be reported, not degrade
+# into a silent build against whatever is unpacked in the plugin directory. The cached result of an
+# earlier configure is dropped, or a since-edited MOXI_SDK_ROOT would never be looked at again.
+if(MOXI_SDK_ROOT)
+    unset(MOXIReceiverSDK_DIR CACHE)
+    find_package(MOXIReceiverSDK 1.1 QUIET NO_DEFAULT_PATH PATHS "${MOXI_SDK_ROOT}")
+    if(NOT TARGET Moxi::Receiver)
+        message(WARNING "MOXI_SDK_ROOT='${MOXI_SDK_ROOT}' holds no MOXIReceiverSDK 1.1 or newer; "
+                        "ignoring it and searching the usual paths")
+    endif()
+endif()
+
+if(NOT TARGET Moxi::Receiver)
+    find_package(MOXIReceiverSDK 1.1 QUIET PATHS
+                 "${_JMEX_LOCAL_SDK_ROOT}/sdk/linux-x64"
+                 "${_JMEX_LOCAL_SDK_ROOT}")
+endif()
 
 if(NOT TARGET Moxi::Receiver)
     message(STATUS "Skipping jmex plugin build: MOXIReceiverSDK 1.1 or newer not found "
@@ -37,6 +40,9 @@ if(NOT TARGET Moxi::Receiver)
                    "MOXI_SDK_ROOT to <sdk>/sdk/linux-x64)")
     return()
 endif()
+
+# Which SDK answered, for a CMAKE_PREFIX_PATH that has gone stale as much as for a deliberate one.
+message(STATUS "jmex plugin: MOXIReceiverSDK ${MOXIReceiverSDK_VERSION} from ${MOXIReceiverSDK_DIR}")
 
 add_subdirectory(core)
 add_subdirectory(app)

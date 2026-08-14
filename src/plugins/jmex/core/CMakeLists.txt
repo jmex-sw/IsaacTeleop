@@ -13,14 +13,15 @@ target_include_directories(jmex_plugin_core
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
 )
 
+# Public headers include schema_pusher.hpp and oxr_session_handles.hpp, so both targets propagate.
+# The vendor SDK does not: no public header names it, and this library is the only caller -- what
+# the plugin needs from it (the dialect, the version string) is behind jmex/moxi_session.hpp.
 target_link_libraries(jmex_plugin_core
     PUBLIC
-        # Moxi::Receiver is PUBLIC because main.cpp needs MOXI_LOCAL_MOTION_ROBOT to pick a dialect.
-        Moxi::Receiver
         pusherio::pusherio
-        oxr::oxr_core
-    PRIVATE
         oxr::oxr_utils
+    PRIVATE
+        Moxi::Receiver
         isaacteleop_schema
 )
 
@@ -30,4 +31,4 @@ set_target_properties(jmex_plugin_core PROPERTIES
     VISIBILITY_INLINES_HIDDEN YES
 )
 
-add_library(jmex::jmex_plugin_core ALIAS jmex_plugin_core)
+add_library(isaac::jmex_plugin_core ALIAS jmex_plugin_core)

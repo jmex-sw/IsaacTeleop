@@ -55,9 +55,9 @@ loaded**, not the operator. Load the same robot on both ends.
 Prerequisites
 -------------
 
-- **MOXI Receiver SDK** — a separate download from j-mex; not bundled here. CMake finds it at
-  configure time and skips the whole plugin when it is absent, so a tree without the SDK still
-  builds.
+- **MOXI Receiver SDK**, 1.1 or newer — a separate download from j-mex; not bundled here. CMake
+  finds it at configure time and skips the whole plugin when it is absent, so a tree without the SDK
+  still builds.
 - **MOXI Player for Robot** — the vendor application, running **on a second machine** (see
   :ref:`jmex-player-separate-host`).
 - **CloudXR runtime** — the tensor transport is an OpenXR runtime feature, so the runtime is a hard
@@ -81,11 +81,14 @@ Apache-2.0 licensed, so it must not be committed.
 
 To keep the SDK elsewhere, point ``CMAKE_PREFIX_PATH`` or ``MOXI_SDK_ROOT`` (a CMake or environment
 variable) at the SDK's platform directory — the one containing ``lib/cmake/MOXIReceiverSDK``. Both
-take precedence over a copy unpacked in the plugin directory:
+take precedence over a copy unpacked in the plugin directory; ``MOXI_SDK_ROOT`` is searched first
+and warns rather than falling back silently when it holds no SDK the plugin can use. Either way, the
+configure output names the SDK that answered:
 
 .. code-block:: bash
 
-   cmake -B build -DCMAKE_PREFIX_PATH=/path/to/MOXIReceiverSDK-1.0.0/sdk/linux-x64
+   cmake -B build -DMOXI_SDK_ROOT=/path/to/MOXIReceiverSDK-1.1.0/sdk/linux-x64
+   # -- jmex plugin: MOXIReceiverSDK 1.1.0 from /path/to/MOXIReceiverSDK-1.1.0/sdk/linux-x64/lib/cmake/MOXIReceiverSDK
 
 If the plugin is missing from your build, look for ``Skipping jmex plugin build:`` in the configure
 output.
@@ -184,8 +187,8 @@ normal case: it waits, and keeps waiting if Player disconnects and comes back.
    # Explicit channel and collection id
    ./install/plugins/jmex/jmex_plugin 255 jmex
 
-Only **one instance per machine**: the receiver is process-global and its broadcast socket binds a
-fixed port, so a second one has nothing to bind to.
+Only **one instance per machine**: the receiver is process-global, and this plugin always takes the
+same TCP and UDP ports, so a second one has nothing to bind to.
 
 Verifying the transport
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -214,11 +217,6 @@ On the same ``collection_id`` as the plugin:
 ``joint_names`` is matched by name, so a subset is fine — list the DOFs your retargeting graph
 drives. Run ``jmex_joint_state_printer`` to see the exact names your Player is sending.
 
-One serialized ``JointStateOutput`` must fit in 4096 bytes, because ``JointStateSource`` builds its
-``JointStateTracker`` with the default size and offers no way to raise it. A full humanoid's
-actuated joints fit comfortably; adding the non-actuated joints would not. If the budget is ever
-exceeded the plugin says so on stderr and drops the sample rather than failing silently.
-
 Troubleshooting
 ---------------
 
@@ -244,5 +242,6 @@ Troubleshooting
    * - Player only sees the gloves with ``sudo``
      - The udev rule has not taken effect: re-run ``init_env.sh``, then unplug and replug the dongle
 
-See the :code-file:`plugin README <src/plugins/jmex/README.md>` for the payload budget and the
-channel model, and Player's own README and glove guide for the capture workflow.
+See Player's own README and glove guide for the capture workflow, and the
+:code-file:`plugin README <src/plugins/jmex/README.md>` for the build and run steps beside the
+installed binary.

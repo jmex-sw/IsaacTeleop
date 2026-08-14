@@ -6,12 +6,8 @@
  * @brief j-mex MOXI device plugin: streams a MOXI channel's robot joint angles as
  *        ``JointStateOutput`` over the OpenXR tensor transport.
  *
- * Usage: ``jmex_plugin [channel] [collection_id]`` (defaults: 255, "jmex").
- *
- * The build is gated on the MOXI Receiver SDK: without it CMake skips this plugin and the rest of
- * the tree still builds. There is no synthetic backend, so running this binary at all needs the
- * vendor stack -- the SDK to build against and MOXI Player, on a second machine, to stream. The
- * README has the steps.
+ * Usage: ``jmex_plugin [channel] [collection_id]`` (defaults: 255, "jmex"). There is no synthetic
+ * backend: building needs the MOXI Receiver SDK and running needs MOXI Player. See README.md.
  */
 
 #include <jmex/joint_state_publisher.hpp>
@@ -19,7 +15,6 @@
 #include <oxr/oxr_session.hpp>
 #include <pusherio/schema_pusher.hpp>
 
-#include <MoxiRobotReceiver.h>
 #include <chrono>
 #include <cstdlib>
 #include <iostream>
@@ -33,8 +28,7 @@ namespace
 {
 
 // MOXI Player runs at 60 Hz. Polling several times faster keeps the delay between a frame landing
-// and it being published well under one frame, without publishing anything twice -- MoxiSession
-// only reports a frame when the sequence id moves.
+// and it being published well under one frame; nothing is published twice.
 constexpr int kPollHz = 240;
 
 } // namespace
@@ -46,7 +40,7 @@ try
     const std::string collection_id = (argc > 2) ? argv[2] : "jmex";
 
     std::cout << "j-mex MOXI plugin (channel: " << channel << ", collection: " << collection_id
-              << ", SDK: " << MxGetVersion() << ")" << std::endl;
+              << ", SDK: " << moxi_sdk_version() << ")" << std::endl;
 
     // OpenXR first: a missing runtime is the common setup mistake, and failing on it before the
     // MOXI receiver starts means we never take the process-global TCP port just to give it back.
@@ -55,7 +49,7 @@ try
 
     // The receiver is the TCP server; MOXI Player connects in. Starting before the Player is up is
     // the normal case, not an error.
-    MoxiSession moxi(channel, MOXI_LOCAL_MOTION_ROBOT);
+    MoxiSession moxi(channel);
 
     std::cout << "Waiting for MOXI Player to pair on channel " << channel << "..." << std::endl;
 

@@ -7,9 +7,10 @@ add_executable(jmex_joint_state_printer
 
 target_link_libraries(jmex_joint_state_printer
     PRIVATE
-        jmex::jmex_plugin_core
+        isaac::jmex_plugin_core
         deviceio::deviceio_session
         deviceio::deviceio_trackers
+        oxr::oxr_core
 )
 
 install(TARGETS jmex_joint_state_printer RUNTIME DESTINATION plugins/jmex)

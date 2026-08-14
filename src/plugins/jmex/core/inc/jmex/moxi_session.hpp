@@ -22,22 +22,16 @@ struct ActuatedJoint
     std::string name;
 };
 
+//! Version of the MOXI Receiver SDK this plugin is linked against.
+std::string moxi_sdk_version();
+
 /*!
- * @brief The device half of the plugin: one MOXI channel, from pairing to per-frame reads.
+ * @brief The device half of the plugin: one robot-dialect MOXI channel, from pairing to per-frame
+ *        reads.
  *
- * Owns the process-global MOXI receiver. The SDK's entry points are free functions over a single
- * internal receiver, so **only one instance may exist per process**; the constructor enforces that.
- * A second process is a separate matter -- it needs its own TCP port, and this plugin always takes
- * 7000.
- *
- * MOXI Player is the TCP *client*: the SDK listens and the Player connects in. So a freshly
- * constructed session is normally not streaming yet -- callers poll and wait rather than treating
- * the initial silence as a failure. The same is true after a disconnect; the session keeps waiting
- * for the Player to come back.
- *
- * This class is dialect-agnostic on purpose. It exposes what the Robot dialect needs today
- * (actuated joint angles); the general dialect's bone poses will be additional readers on the same
- * connection, not a second connection.
+ * MOXI Player is the TCP *client*: the SDK listens and the Player connects in, so a freshly
+ * constructed session is normally not streaming yet, and neither is one whose Player disconnected.
+ * Callers poll and wait rather than treating silence as a failure.
  */
 class MoxiSession
 {
@@ -47,24 +41,22 @@ public:
 
     /*!
      * @param channel MOXI channel id to open (one skeleton per channel).
-     * @param mtype Player dialect, e.g. ``MOXI_LOCAL_MOTION_ROBOT``. Must match the Player's
-     *        product line or the stream will not decode.
      * @param tcp_port Port the SDK's TCP server binds.
      * @throws std::runtime_error if another MoxiSession already exists in this process, or if the
      *         SDK refuses to start (almost always: the TCP port is in use).
      */
-    explicit MoxiSession(int channel, int mtype, int tcp_port = DEFAULT_TCP_PORT);
+    explicit MoxiSession(int channel, int tcp_port = DEFAULT_TCP_PORT);
     ~MoxiSession();
 
     MoxiSession(const MoxiSession&) = delete;
     MoxiSession& operator=(const MoxiSession&) = delete;
 
     /*!
-     * @brief Pump the receiver once and report whether a *new* frame arrived.
+     * @brief Pump the receiver once and report whether a new sample is ready to publish.
      *
-     * Returns true only when the channel's sequence id moved, so callers can push exactly one
-     * sample per delivered frame instead of re-publishing stale values at the poll rate. Discovers
-     * the actuated joints on the first frame of a pairing.
+     * True means the channel's sequence id moved *and* the joint table has been read, so a caller
+     * publishes at most one sample per delivered frame instead of re-publishing stale values at the
+     * poll rate. The joint table is read on the first frame of a pairing that carries one.
      */
     bool poll();
 

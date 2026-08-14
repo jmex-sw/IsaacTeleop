@@ -7,7 +7,8 @@ add_executable(jmex_plugin
 
 target_link_libraries(jmex_plugin
     PRIVATE
-        jmex::jmex_plugin_core
+        isaac::jmex_plugin_core
+        oxr::oxr_core
 )
 
 install(TARGETS jmex_plugin RUNTIME DESTINATION plugins/jmex)

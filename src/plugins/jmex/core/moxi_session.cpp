@@ -22,15 +22,16 @@ namespace
 std::atomic<bool> g_session_alive{ false };
 
 // Base of the per-channel data ports: channel N receives on this + 1 + N. 10100 is what the SDK
-// used before it took the port as an argument, and what its Python counterpart ships. Moving it is
-// only worth it to make the data ports predictable for a firewall rule, which this plugin does not
-// need -- two receivers on one machine already land on different ports without it.
+// used before it took the port as an argument, and what its Python counterpart ships.
 constexpr int kUdpStartPort = 10100;
+
+// Mechanism type MxRGetRobotJointInformation reports for an actuated joint; 0 is root, 1 is fixed.
+constexpr int kJointTypeRevolute = 2;
 
 // MxBindDisconnectEvent takes a bare function pointer with no userData, so the handler cannot reach
 // an instance. It does not need to: the only state it owns is "the Player went away", and poll()
 // turns that into the actual transition on the main thread. Runs on the SDK's TCP receive thread,
-// so it must not block -- setting one flag is the whole point.
+// so it must not block.
 std::atomic<bool> g_disconnect_signalled{ false };
 
 void on_disconnect(const int* /*channel_ids*/, int /*channel_count*/)
@@ -40,7 +41,13 @@ void on_disconnect(const int* /*channel_ids*/, int /*channel_count*/)
 
 } // namespace
 
-MoxiSession::MoxiSession(int channel, int mtype, int tcp_port) : channel_(channel)
+std::string moxi_sdk_version()
+{
+    const char* version = MxGetVersion();
+    return (version != nullptr) ? version : "unknown";
+}
+
+MoxiSession::MoxiSession(int channel, int tcp_port) : channel_(channel)
 {
     bool expected = false;
     if (!g_session_alive.compare_exchange_strong(expected, true))
@@ -51,7 +58,7 @@ MoxiSession::MoxiSession(int channel, int mtype, int tcp_port) : channel_(channe
     }
 
     // NULL tcpIp = bind all interfaces; NULL broadcast ip = 255.255.255.255.
-    if (!MxRStartSystem(nullptr, tcp_port, nullptr, kUdpStartPort, mtype))
+    if (!MxRStartSystem(nullptr, tcp_port, nullptr, kUdpStartPort, MOXI_LOCAL_MOTION_ROBOT))
     {
         g_session_alive.store(false);
         throw std::runtime_error("MoxiSession: MxRStartSystem failed on TCP port " + std::to_string(tcp_port) +
@@ -144,9 +151,9 @@ void MoxiSession::discover_joints()
         {
             continue; // carries no robot joint information -- every joint on a general-line channel
         }
-        // 0 = root, 1 = fixed, 2 = revolute. Only revolute joints are actuated degrees of freedom;
-        // the others carry no angle and would publish a constant zero.
-        if (joint_type != 2)
+        // Only revolute joints are actuated degrees of freedom; the others carry no angle and would
+        // publish a constant zero.
+        if (joint_type != kJointTypeRevolute)
         {
             continue;
         }
