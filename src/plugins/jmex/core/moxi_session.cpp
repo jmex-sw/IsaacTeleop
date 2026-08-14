@@ -3,7 +3,7 @@
 
 #include "inc/jmex/moxi_session.hpp"
 
-#include <MoxiReceiver.h>
+#include <MoxiRobotReceiver.h>
 #include <atomic>
 #include <iostream>
 #include <stdexcept>
@@ -17,10 +17,15 @@ namespace jmex
 namespace
 {
 
-// The SDK's entry points are free functions over one internal receiver, and on Linux its broadcast
-// socket binds a fixed port, so a second instance in the same process would fight the first over
-// both. Enforced here rather than documented and hoped for.
+// The SDK's entry points are free functions over one internal receiver, so a second instance in the
+// same process would fight the first over it. Enforced here rather than documented and hoped for.
 std::atomic<bool> g_session_alive{ false };
+
+// Base of the per-channel data ports: channel N receives on this + 1 + N. 10100 is what the SDK
+// used before it took the port as an argument, and what its Python counterpart ships. Moving it is
+// only worth it to make the data ports predictable for a firewall rule, which this plugin does not
+// need -- two receivers on one machine already land on different ports without it.
+constexpr int kUdpStartPort = 10100;
 
 // MxBindDisconnectEvent takes a bare function pointer with no userData, so the handler cannot reach
 // an instance. It does not need to: the only state it owns is "the Player went away", and poll()
@@ -46,7 +51,7 @@ MoxiSession::MoxiSession(int channel, int mtype, int tcp_port) : channel_(channe
     }
 
     // NULL tcpIp = bind all interfaces; NULL broadcast ip = 255.255.255.255.
-    if (!MxRStartSystem(nullptr, tcp_port, nullptr, mtype))
+    if (!MxRStartSystem(nullptr, tcp_port, nullptr, kUdpStartPort, mtype))
     {
         g_session_alive.store(false);
         throw std::runtime_error("MoxiSession: MxRStartSystem failed on TCP port " + std::to_string(tcp_port) +

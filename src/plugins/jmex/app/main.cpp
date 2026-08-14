@@ -19,7 +19,7 @@
 #include <oxr/oxr_session.hpp>
 #include <pusherio/schema_pusher.hpp>
 
-#include <MoxiReceiver.h>
+#include <MoxiRobotReceiver.h>
 #include <chrono>
 #include <cstdlib>
 #include <iostream>

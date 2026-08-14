@@ -26,9 +26,9 @@ struct ActuatedJoint
  * @brief The device half of the plugin: one MOXI channel, from pairing to per-frame reads.
  *
  * Owns the process-global MOXI receiver. The SDK's entry points are free functions over a single
- * internal receiver, and on Linux its broadcast socket binds port 10100, so **only one instance may
- * exist per process, and only one such process per machine**. The constructor enforces the first
- * half of that.
+ * internal receiver, so **only one instance may exist per process**; the constructor enforces that.
+ * A second process is a separate matter -- it needs its own TCP port, and this plugin always takes
+ * 7000.
  *
  * MOXI Player is the TCP *client*: the SDK listens and the Player connects in. So a freshly
  * constructed session is normally not streaming yet -- callers poll and wait rather than treating
